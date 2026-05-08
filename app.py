@@ -11,7 +11,7 @@ def predict(text: str):
         return "Please enter some text.", None
 
     result = classify(text, model, tokenizer, number_token_ids)
-    label_output = f"**{result['label']}** (score: {result['score']})"
+    label_output = f"**{result['label']}** (score: {result['score']}, weighted score: {result['weighted_score']})"
     confidences = result["probabilities"]
     return label_output, confidences
 

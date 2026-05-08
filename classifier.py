@@ -155,9 +155,11 @@ def classify(text: str, model, tokenizer, number_token_ids) -> dict:
 
     score = int(probs.argmax(dim=-1).item())
     prob_list = probs[0].tolist()
+    weighted_score = sum(i * p for i, p in enumerate(prob_list))
 
     return {
         "score": score,
+        "weighted_score": round(weighted_score, 4),
         "label": LABEL_MAP[score],
         "probabilities": {LABEL_MAP[i]: round(p, 4) for i, p in enumerate(prob_list)},
     }
