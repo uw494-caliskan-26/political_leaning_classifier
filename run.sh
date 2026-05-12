@@ -1,17 +1,14 @@
 #!/usr/bin/env bash
 set -e
+cd "$(dirname "$0")"
 
-VENV_DIR=".venv"
-
-if [ ! -d "$VENV_DIR" ]; then
-    echo "Creating virtual environment..."
-    python3 -m venv "$VENV_DIR"
+if ! command -v uv >/dev/null 2>&1; then
+  echo "Install uv first: https://docs.astral.sh/uv/"
+  exit 1
 fi
 
-source "$VENV_DIR/bin/activate"
-
-echo "Installing dependencies..."
-pip install -r requirements.txt
+echo "Syncing dependencies (uv)..."
+uv sync
 
 echo "Launching Political Leaning Classifier WebUI..."
-python app.py
+uv run python app.py

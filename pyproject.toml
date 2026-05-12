@@ -1,0 +1,16 @@
+[project]
+name = "political-leaning-classifier"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "accelerate>=1.13.0",
+    "bitsandbytes>=0.49.2",
+    "gradio>=6.14.0",
+    "pandas>=3.0.3",
+    "python-dotenv>=1.2.2",
+    "safetensors>=0.7.0",
+    "torch>=2.11.0",
+    "transformers>=5.8.0",
+]

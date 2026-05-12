@@ -12,17 +12,28 @@ Local web UI and batch script for [zhezhou1106/political-leaning-classifier-v2](
 
 ## Quick Start (one command)
 
+Install [uv](https://docs.astral.sh/uv/) if you do not have it, then:
+
 ```bash
 bash run.sh
 ```
 
-This installs dependencies and launches a Gradio web UI at **http://localhost:7860**.
+This runs `uv sync` (creates or updates `.venv` from `uv.lock`) and launches the Gradio web UI at **http://localhost:7860**.
+
+Equivalent manual steps:
+
+```bash
+uv sync
+uv run python app.py
+```
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.13+ (see `requires-python` in `pyproject.toml`; `.python-version` pins the team default)
+- [uv](https://docs.astral.sh/uv/) for installs and runs
 - CUDA GPU with >= 6 GB VRAM (4-bit quantization is enabled by default)
-- `pip` (dependencies are listed in `requirements.txt`)
+
+Dependencies are declared in `pyproject.toml` and pinned in `uv.lock` (commit both when you change deps).
 
 ## Configuration
 
@@ -37,7 +48,7 @@ If `MODEL_PATH` is not set, the model is downloaded from Hugging Face Hub automa
 ## Web UI
 
 ```bash
-python app.py
+uv run python app.py
 ```
 
 Paste any article or text, click **Classify**, and see the predicted label plus per-class probabilities.
@@ -47,13 +58,13 @@ Paste any article or text, click **Classify**, and see the predicted label plus 
 Classify a CSV file (must have a `text` column):
 
 ```bash
-python batch_classify.py --input articles.csv
+uv run python batch_classify.py --input articles.csv
 ```
 
 Or pass strings directly:
 
 ```bash
-python batch_classify.py --texts "First article text" "Second article text"
+uv run python batch_classify.py --texts "First article text" "Second article text"
 ```
 
 Results are saved to `results/<timestamp>_results.csv`.

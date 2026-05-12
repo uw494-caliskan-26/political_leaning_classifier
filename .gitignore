@@ -7,3 +7,21 @@ __pycache__/
 temp/
 .DS_Store
 data/
+
+# Packaging / tooling (uv uses pyproject.toml + uv.lock; venv stays ignored above)
+*.egg-info/
+.eggs/
+dist/
+build/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Packaging / tooling (uv uses pyproject.toml + uv.lock; venv stays ignored above)
+*.egg-info/
+.eggs/
+dist/
+build/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
