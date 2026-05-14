@@ -1,7 +1,8 @@
 """Evaluate classifier on a labeled CSV (text + label columns).
 
 Based on batch_classify.py: loads the same model, runs classify_batch, records
-per-row predictions, then computes confusion matrix (integer labels 0–4) and MAE.
+per-row predictions, then computes confusion matrix (integer labels 0–4), accuracy,
+and MAE.
 
 Usage:
     python evaluate.py
@@ -81,6 +82,7 @@ def main():
 
     out_pred = pd.DataFrame(rows)
     mae = (out_pred["label_true"] - out_pred["label_pred"]).abs().mean()
+    accuracy = (out_pred["label_true"] == out_pred["label_pred"]).mean()
     cm = confusion_matrix_counts(y_true, pred_scores, n_classes=5)
 
     RESULTS_DIR.mkdir(exist_ok=True)
@@ -98,6 +100,7 @@ def main():
         "input": str(input_path.resolve()),
         "n_rows": len(texts),
         "n_dropped_missing": dropped,
+        "accuracy_exact_match": float(accuracy),
         "mae_integer_pred": float(mae),
         "confusion_matrix": cm,
         "confusion_matrix_note": "rows are true label 0–4, columns are predicted label 0–4",
@@ -108,6 +111,7 @@ def main():
     print(f"Predictions saved to {pred_path}")
     print(f"Confusion matrix saved to {cm_path}")
     print(f"Metrics saved to {metrics_path}")
+    print(f"Accuracy (exact class match): {accuracy:.4f}")
     print(f"MAE (integer prediction): {mae:.4f}")
     print(cm_df.to_string())
 

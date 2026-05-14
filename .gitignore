@@ -24,3 +24,6 @@ build/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+logs/
+job.sbatch
+results/

@@ -101,11 +101,20 @@ def _get_remapped_model_path(model_path: str) -> str:
     return str(cache_dir)
 
 
+def _resolve_model_path(model_path: str) -> str:
+    """Return a local directory containing weights (download HF hub IDs first)."""
+    path = Path(model_path)
+    if path.is_dir():
+        return str(path.resolve())
+    from huggingface_hub import snapshot_download
+
+    return snapshot_download(model_path)
+
+
 def load_model(quantize_4bit: bool = True):
     model_path = os.getenv("MODEL_PATH", MODEL_ID)
-
-    is_local = Path(model_path).is_dir()
-    if is_local and _needs_key_remap(model_path):
+    model_path = _resolve_model_path(model_path)
+    if _needs_key_remap(model_path):
         model_path = _get_remapped_model_path(model_path)
 
     try:
