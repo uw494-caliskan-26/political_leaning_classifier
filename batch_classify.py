@@ -6,13 +6,13 @@ Usage:
 """
 
 import argparse
-import os
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
+from tqdm import tqdm
 
-from classifier import load_model, classify_batch, LABEL_MAP
+from classifier import DEFAULT_INFERENCE_BATCH_SIZE, LABEL_MAP, classify_batch, load_model
 
 RESULTS_DIR = Path("results")
 
@@ -35,7 +35,16 @@ def main():
 
     print(f"Classifying {len(texts)} text(s)...")
     model, tokenizer, number_token_ids = load_model(quantize_4bit=not args.no_quantize)
-    results = classify_batch(texts, model, tokenizer, number_token_ids)
+    bs = DEFAULT_INFERENCE_BATCH_SIZE
+    results = []
+    for start in tqdm(
+        range(0, len(texts), bs),
+        desc="Classifying",
+        unit="batch",
+        total=(len(texts) + bs - 1) // bs if texts else 0,
+    ):
+        chunk = texts[start : start + bs]
+        results.extend(classify_batch(chunk, model, tokenizer, number_token_ids))
 
     rows = []
     for text, res in zip(texts, results):

@@ -25,6 +25,8 @@ LABEL_MAP = {
     4: "Far Right",
 }
 
+DEFAULT_INFERENCE_BATCH_SIZE = 8
+
 PROMPT_TEMPLATE = """You are an expert media bias analyst. Read the following news article and classify its political leaning on a 0-4 scale.
 
 Article:
@@ -44,9 +46,12 @@ The correct answer is: class """
 def _remap_key(key: str) -> str:
     """Remap state dict keys from Unsloth's nested structure to standard transformers."""
     if key.startswith("model.language_model.language_model.language_model."):
-        return "model.language_model." + key[len("model.language_model.language_model.language_model."):]
+        return (
+            "model.language_model."
+            + key[len("model.language_model.language_model.language_model.") :]
+        )
     if key.startswith("model.language_model.visual."):
-        return "model.visual." + key[len("model.language_model.visual."):]
+        return "model.visual." + key[len("model.language_model.visual.") :]
     return key
 
 
@@ -57,9 +62,13 @@ def _needs_key_remap(model_path: str) -> bool:
         return False
     try:
         from safetensors import safe_open
+
         with safe_open(str(safetensors_path), framework="pt") as f:
             keys = f.keys()
-            return any(k.startswith("model.language_model.language_model.language_model.") for k in keys)
+            return any(
+                k.startswith("model.language_model.language_model.language_model.")
+                for k in keys
+            )
     except Exception:
         return False
 
@@ -137,7 +146,9 @@ def load_model(quantize_4bit: bool = True):
     number_token_ids = []
     for digit in range(5):
         ids = tokenizer.encode(str(digit), add_special_tokens=False)
-        assert len(ids) == 1, f"Tokenizer must encode digit '{digit}' as a single token."
+        assert len(ids) == 1, (
+            f"Tokenizer must encode digit '{digit}' as a single token."
+        )
         number_token_ids.append(ids[0])
 
     return model, tokenizer, number_token_ids
@@ -165,8 +176,43 @@ def classify(text: str, model, tokenizer, number_token_ids) -> dict:
     }
 
 
-def classify_batch(texts: list[str], model, tokenizer, number_token_ids) -> list[dict]:
-    results = []
-    for text in texts:
-        results.append(classify(text, model, tokenizer, number_token_ids))
+def classify_batch(
+    texts: list[str],
+    model,
+    tokenizer,
+    number_token_ids,
+    batch_size: int = DEFAULT_INFERENCE_BATCH_SIZE,
+) -> list[dict]:
+    if batch_size < 1:
+        raise ValueError("batch_size must be at least 1.")
+
+    results: list[dict] = []
+    device = model.device
+
+    for start in range(0, len(texts), batch_size):
+        chunk = texts[start : start + batch_size]
+        prompts = [PROMPT_TEMPLATE.format(article=t.strip()) for t in chunk]
+        enc = tokenizer(prompts, return_tensors="pt", padding=True).to(device)
+
+        with torch.inference_mode():
+            out = model(**enc, logits_to_keep=1)
+            last_logits = out.logits[:, -1, :]
+            digit_logits = last_logits[:, number_token_ids]
+            probs = F.softmax(digit_logits, dim=-1)
+
+        for i in range(probs.shape[0]):
+            prob_list = probs[i].tolist()
+            score = int(probs[i].argmax().item())
+            weighted_score = sum(j * p for j, p in enumerate(prob_list))
+            results.append(
+                {
+                    "score": score,
+                    "weighted_score": round(weighted_score, 4),
+                    "label": LABEL_MAP[score],
+                    "probabilities": {
+                        LABEL_MAP[j]: round(prob_list[j], 4) for j in range(5)
+                    },
+                }
+            )
+
     return results

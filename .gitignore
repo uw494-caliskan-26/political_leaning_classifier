@@ -6,7 +6,6 @@ __pycache__/
 .remapped_cache/
 temp/
 .DS_Store
-data/
 
 # Packaging / tooling (uv uses pyproject.toml + uv.lock; venv stays ignored above)
 *.egg-info/
